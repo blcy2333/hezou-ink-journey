@@ -1,0 +1,15 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>核舟 · 一隅江南</title><meta name="robots" content="noindex,nofollow,noarchive,nosnippet"><link rel="stylesheet" href="style.css?v=24"></head><body>
+<div id="painted" aria-hidden="true"></div><canvas id="world" aria-label="可拖动环顾的三维核舟场景"></canvas><div class="paper"></div>
+<header><a class="brand" href="./"><span class="seal">核舟</span><span>一隅江南<small>A WORLD WITHIN A SEED</small></span></a><div class="top"><span id="chapter">壹 · 水巷入画</span><button id="sound" aria-label="开启环境音">声 · 关</button><button id="reset">重游</button></div></header>
+<aside class="poem"><span id="verse">一舟入画</span><small id="verseSub">半窗江南</small><i></i></aside>
+<div id="loading">正在展开江南…</div>
+<aside id="riverHud" hidden><span id="routePlace">山塘水巷</span><progress id="routeProgress" max="160" value="0"></progress><small>一程画中江南</small></aside><div id="hotspots"></div>
+<section id="intro"><p class="eyebrow">一枚果核，一场微小的奇遇</p><h1>舟中自有<br><em>另一重天地。</em></h1><p class="lede">循着水声入江南。<br>推开一扇窗，看看东坡把月亮藏在了哪里。</p><button id="start" class="primary">入 画 <span>→</span></button><p class="hint">三维互动习作 · 建议开启声音</p></section>
+<section id="dialogue" hidden><div class="speaker"><span id="who"></span><small id="tone"></small></div><p id="line"></p><div id="choices"></div></section>
+<div id="toast" role="status"></div>
+<section id="puzzle" hidden><p class="eyebrow">花窗里的小机关</p><h2 id="puzzleTitle">月亮，藏在哪一扇？</h2><p id="puzzleDesc">轻转花窗。窗外的天地，也会跟着改变。</p><div class="puzzleBtns"><button id="prevWindow" aria-label="向左转动花窗">←</button><span id="windowName">水巷 · 一重景</span><button id="nextWindow" aria-label="向右转动花窗">→</button></div><button id="closePuzzle" class="quiet">先看看别处</button></section>
+<section id="ending" hidden><p class="eyebrow">叁 · 掌中天地</p><h2>方才一场江南，<br>原来不盈一握。</h2><p>拖动，看看这枚核舟的另一面。<br>窗、人物与一场奇遇，都藏在这里。</p><button id="backInside" class="primary">再入舟中 ↗</button><small>核雕主题幻想体验 · 场景与机关为艺术化设计</small></section>
+<div id="joystick" role="group" aria-label="船舱前进后退与转向操作杆" hidden><span class="joy-dir joy-front">↑ 前进</span><span class="joy-dir joy-back">↓ 后退</span><span class="joy-dir joy-left">← 左转</span><span class="joy-dir joy-right">右转 →</span><div id="joystickKnob" aria-hidden="true"></div></div>
+<footer id="controls" hidden><div><span class="dot"></span><span id="instruction">拖动环顾 · 按住行舟 · 靠近桥下的核舟小境</span></div><nav><button id="lookLeft" hidden>看左岸</button><button id="forwardView" hidden>看前方</button><button id="lookRight" hidden>看右岸</button><button id="autoSail" hidden>自动行舟</button><button id="sail">按住行舟</button><button id="enter">进入船舱 ↗</button><button id="inspectWindow" hidden>近看花窗</button><button id="inspectTurn" hidden>转动花窗 ↻</button><button id="face" hidden>回看花窗</button><button id="outside" hidden>掌中看舟 ↗</button></nav></footer>
+<a href="model.html" style="position:absolute;bottom:90px;right:4%;font-size:12px;color:#824830;padding:10px;background:#f3efe2df;z-index:6;text-decoration:none">新核舟模型 · 旋转查看 ↗</a>
+<script type="module" src="app.js?v=25"></script></body></html>
