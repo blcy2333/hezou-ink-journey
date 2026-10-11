@@ -1,0 +1,44 @@
+import * as T from './vendor/three.module.js';
+
+// Real rounded relief: restrained same-colour carving, no printed ornament.
+export function makeCabinRefinement(materials){
+ const group=new T.Group(),{raised,edge,base}=materials;
+ const mesh=(g,m,p,x=0,y=0,z=0)=>{const o=new T.Mesh(g,m);o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;p.add(o);return o;};
+ const line=(points,r,p,mat=raised)=>mesh(new T.TubeGeometry(new T.CatmullRomCurve3(points.map(v=>new T.Vector3(...v))),24,r,6,false),mat,p);
+ function blossom(p,x,y,z,size=.075){for(let j=0;j<5;j++){const a=j*Math.PI*2/5;const petal=mesh(new T.SphereGeometry(size*.46,10,7),raised,p,x+Math.cos(a)*size*.62,y+Math.sin(a)*size*.62,z);petal.scale.z=.36;}mesh(new T.SphereGeometry(size*.24,10,7),edge,p,x,y,z+.008);}
+ // Plum branches follow the inside jambs, leaving the pierced centre open.
+ for(const side of [-1,1]){
+   const p=new T.Group();p.position.set(side*3.3,0,-5.66);group.add(p);
+   line([[0,.65,0],[side*.06,1.25,0],[-side*.04,1.9,0],[side*.09,2.65,0],[0,3.8,0]],.018,p);
+   for(let i=0;i<6;i++){const y=1+i*.44,dx=(i%2?1:-1)*.17;line([[0,y-.13,0],[dx*.4,y,0],[dx,y+.12,0]],.009,p);blossom(p,dx,y+.12,.014,.065);}
+ }
+ // Suzhou-style curled apron detail and finely beaded table edges.
+ for(const [x,z] of [[-3.45,-3.6],[3.45,-3.15],[-3.45,1.4],[3.45,2.5]]){
+   const p=new T.Group();p.position.set(x,0,z);group.add(p);
+   for(const s of [-1,1]){
+     line([[-.65,.88,s*.51],[0,.88,s*.51],[.65,.88,s*.51]],.011,p);
+     for(let j=-3;j<=3;j++){
+       const cx=j*.17;line([[cx-.07,.73,s*.51],[cx-.06,.67,s*.52],[cx,.65,s*.53],[cx+.055,.69,s*.52],[cx+.015,.72,s*.51]],.012,p);
+     }
+   }
+ }
+ // A small carved open scroll beside the tea tray: engraved water-line relief.
+ const scroll=new T.Group();scroll.position.set(2.96,.99,2.75);scroll.rotation.y=.18;group.add(scroll);
+ const shape=new T.Shape();shape.moveTo(-.16,-.24);shape.lineTo(.16,-.24);shape.lineTo(.16,.24);shape.lineTo(-.16,.24);shape.closePath();
+ const sheet=mesh(new T.ExtrudeGeometry(shape,{depth:.012,bevelEnabled:true,bevelSize:.008,bevelThickness:.005,bevelSegments:3}),base,scroll);sheet.rotation.x=-Math.PI/2;
+ for(const z of [-.24,.24]){const rod=mesh(new T.CylinderGeometry(.028,.028,.37,16),edge,scroll,0,.018,z);rod.rotation.z=Math.PI/2;}
+ for(let i=0;i<4;i++)line([[-.11,.022,-.14+i*.08],[-.03,.024,-.16+i*.08],[.05,.024,-.13+i*.08],[.11,.022,-.15+i*.08]],.004,scroll,raised);
+ return group;
+}
+
+export function refineCabinObjects(items,materials){
+ // The original pipa was showing its back to arriving visitors.
+ if(items.lute)for(const child of items.lute.children)child.rotation.y=Math.PI;
+ if(items.fan){
+   const sh=new T.Shape();
+   for(let i=0;i<=48;i++){const a=-1.05+i*2.1/48,x=.70*Math.sin(a),y=.95+.54*Math.cos(a);if(i===0)sh.moveTo(x,y);else sh.lineTo(x,y);}
+   for(let i=48;i>=0;i--){const a=-1.05+i*2.1/48;sh.lineTo(.48*Math.sin(a),.71+.40*Math.cos(a));}sh.closePath();
+   const leaf=new T.Mesh(new T.ExtrudeGeometry(sh,{depth:.018,bevelEnabled:true,bevelSegments:3,bevelSize:.006,bevelThickness:.005}),materials.base);
+   leaf.position.z=-.065;leaf.castShadow=leaf.receiveShadow=true;items.fan.add(leaf);
+ }
+}

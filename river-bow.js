@@ -9,9 +9,9 @@ export function makeRiverBow(){
     ctx.strokeStyle=`rgba(55,24,10,${.025+random()*.055})`;ctx.lineWidth=.45+random()*.65;ctx.beginPath();ctx.moveTo(x,y);ctx.bezierCurveTo(x+3,y+l*.35,x-2,y+l*.7,x+1,y+l);ctx.stroke();
   }
   const map=new T.CanvasTexture(grain);map.wrapS=map.wrapT=T.RepeatWrapping;map.repeat.set(2.4,4.2);map.colorSpace=T.SRGBColorSpace;
-  const wood=new T.MeshPhysicalMaterial({map,color:0x9c5a33,roughness:.48,clearcoat:.08,clearcoatRoughness:.72,side:T.DoubleSide});
-  const edge=new T.MeshPhysicalMaterial({map,color:0x67331f,roughness:.52,clearcoat:.05,side:T.DoubleSide});
-  const raised=new T.MeshPhysicalMaterial({map,color:0xc17a46,roughness:.42,clearcoat:.10,clearcoatRoughness:.68});
+  const wood=new T.MeshPhysicalMaterial({bumpMap:map,bumpScale:.008,color:new T.Color().setRGB(.285,.095,.032),roughness:.48,clearcoat:.08,clearcoatRoughness:.72,side:T.DoubleSide});
+  const edge=new T.MeshPhysicalMaterial({bumpMap:map,bumpScale:.008,color:new T.Color().setRGB(.365,.125,.038),roughness:.52,clearcoat:.05,side:T.DoubleSide});
+  const raised=new T.MeshPhysicalMaterial({bumpMap:map,bumpScale:.008,color:new T.Color().setRGB(.48,.205,.066),roughness:.42,clearcoat:.10,clearcoatRoughness:.68});
   const add=(geometry,material=wood,parent=group)=>{const mesh=new T.Mesh(geometry,material);mesh.castShadow=mesh.receiveShadow=true;parent.add(mesh);return mesh;};
   const tube=(points,r=.025,material=edge,parent=group)=>add(new T.TubeGeometry(new T.CatmullRomCurve3(points.map(p=>new T.Vector3(...p))),48,r,8,false),material,parent);
   const box=(w,h,d,x,y,z,material=wood,parent=group)=>{const mesh=add(new T.BoxGeometry(w,h,d,4,2,4),material,parent);mesh.position.set(x,y,z);return mesh;};
