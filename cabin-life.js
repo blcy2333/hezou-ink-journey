@@ -19,9 +19,12 @@ const replies={
 };
 
 export function makeCabinLife(dong,fo,panel){
- const actors=[{root:dong,x:-1.45,z:-2.9,phase:0},{root:fo,x:1.45,z:-1.5,phase:2}];
+ const actors=[
+   {root:dong,x:-1.45,z:-2.9,phase:0,stops:[-2.9,-2.25,-1.75],nextStop:1},
+   {root:fo,x:1.45,z:-1.5,phase:2,stops:[-1.5,-.85,-2.05],nextStop:1}
+ ];
  const counts={};let time=0,next=0,index=0,actionUntil=0,action='idle';
- for(const a of actors){a.root.position.set(a.x,0,a.z);a.heading=0;a.wait=3.5+a.phase*1.25;a.target=a.phase? -3.3:.6;}
+ for(const a of actors){a.root.position.set(a.x,0,a.z);a.heading=0;a.wait=9+a.phase*2;a.target=a.stops[a.nextStop];}
  const bubbles=actors.map((actor,i)=>{
    const el=document.createElement('button'),name=document.createElement('b'),line=document.createElement('span');
    el.type='button';el.className='actor-speech';name.textContent=i?'佛印':'东坡';el.append(name,line);el.onclick=()=>interact(i?'fo':'dong');panel.append(el);
@@ -50,7 +53,7 @@ export function makeCabinLife(dong,fo,panel){
        const step=Math.sign(dz)*Math.min(Math.abs(dz),dt*.44);
        // Both characters stay in separate clear lanes; yield to the visitor.
        if(Math.hypot(p.x-player.x,p.z+step-player.z)>.85){p.z+=step;walking=true;}
-       if(Math.abs(dz)<.035){a.wait=6+i*1.75;a.target=a.target>0?-3.3:.6;}
+       if(Math.abs(dz)<.035){a.wait=14+i*5;a.nextStop=(a.nextStop+1)%a.stops.length;a.target=a.stops[a.nextStop];}
      }
      const delta=Math.atan2(Math.sin(heading-a.heading),Math.cos(heading-a.heading));a.heading+=delta*(1-Math.exp(-dt*3));
      a.root.rotation.y=a.heading;
