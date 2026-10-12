@@ -28,7 +28,22 @@ export function makeCabinRefinement(materials){
  const sheet=mesh(new T.ExtrudeGeometry(shape,{depth:.012,bevelEnabled:true,bevelSize:.008,bevelThickness:.005,bevelSegments:3}),base,scroll);sheet.rotation.x=-Math.PI/2;
  for(const z of [-.24,.24]){const rod=mesh(new T.CylinderGeometry(.028,.028,.37,16),edge,scroll,0,.018,z);rod.rotation.z=Math.PI/2;}
  for(let i=0;i<4;i++)line([[-.11,.022,-.14+i*.08],[-.03,.024,-.16+i*.08],[.05,.024,-.13+i*.08],[.11,.022,-.15+i*.08]],.004,scroll,raised);
- return group;
+ // Small pierced quatrefoils in the upper transom; rounded inner edges catch light.
+ for(let i=-5;i<=5;i++){
+   const sh=new T.Shape();sh.moveTo(-.20,-.14);sh.lineTo(.20,-.14);sh.lineTo(.20,.14);sh.lineTo(-.20,.14);sh.closePath();
+   const hole=new T.Path();
+   for(let j=0;j<=64;j++){const a=-j*Math.PI*2/64,r=.084+.022*Math.cos(4*a);if(!j)hole.moveTo(Math.cos(a)*r,Math.sin(a)*r);else hole.lineTo(Math.cos(a)*r,Math.sin(a)*r);}hole.closePath();sh.holes.push(hole);
+   mesh(new T.ExtrudeGeometry(sh,{depth:.035,bevelEnabled:true,bevelSize:.012,bevelThickness:.012,bevelSegments:4,curveSegments:24}),edge,group,i*.46,4.38,-5.70);
+ }
+ return batchCarvings(group);
+}
+
+// Preserve every carved surface but submit only one mesh per material.
+function batchCarvings(group){
+ group.updateMatrixWorld(true);const batches=new Map();
+ group.traverse(o=>{if(!o.isMesh)return;const g=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();g.applyMatrix4(o.matrixWorld);if(!batches.has(o.material))batches.set(o.material,[]);batches.get(o.material).push(g);});
+ const result=new T.Group();for(const [material,parts] of batches){const g=new T.BufferGeometry();for(const key of ['position','normal','uv']){let count=0;for(const part of parts)count+=part.getAttribute(key).array.length;const values=new Float32Array(count);let offset=0;for(const part of parts){values.set(part.getAttribute(key).array,offset);offset+=part.getAttribute(key).array.length;}g.setAttribute(key,new T.BufferAttribute(values,key==='uv'?2:3));}g.computeBoundingSphere();const m=new T.Mesh(g,material);m.castShadow=m.receiveShadow=true;result.add(m);for(const part of parts)part.dispose();}
+ group.traverse(o=>{if(o.isMesh)o.geometry.dispose();});return result;
 }
 
 export function refineCabinObjects(items,materials){
