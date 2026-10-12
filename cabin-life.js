@@ -21,22 +21,36 @@ const replies={
 export function makeCabinLife(dong,fo,panel){
  const actors=[{root:dong,x:-1.45,z:-2.9,phase:0},{root:fo,x:1.45,z:-1.5,phase:2}];
  const counts={};let time=0,next=0,index=0,actionUntil=0,action='idle';
- for(const a of actors){a.root.position.set(a.x,0,a.z);a.heading=0;a.wait=.15+a.phase*.2;a.target=a.phase? -3.3:.6;}
- function show(lines){panel.replaceChildren();for(let i=0;i<4;i+=2){const p=document.createElement('p'),name=document.createElement('b');name.textContent=lines[i];p.append(name,document.createTextNode(lines[i+1]));panel.append(p);}const hint=document.createElement('small');hint.textContent='舟中幻想闲话 · 点击人物或小物，接一句';panel.append(hint);}
- function interact(kind){const list=replies[kind]||replies.dong;const n=counts[kind]||0;counts[kind]=n+1;show(list[n%list.length]);next=time+13;actionUntil=time+4.5;action=kind;}
- return {actors,interact,update(dt,enabled,player){
-   panel.hidden=!enabled;if(!enabled)return;time+=dt;
-   if(time>=next){show(idle[index++%idle.length]);next=time+12;}
+ for(const a of actors){a.root.position.set(a.x,0,a.z);a.heading=0;a.wait=3.5+a.phase*1.25;a.target=a.phase? -3.3:.6;}
+ const bubbles=actors.map((actor,i)=>{
+   const el=document.createElement('button'),name=document.createElement('b'),line=document.createElement('span');
+   el.type='button';el.className='actor-speech';name.textContent=i?'佛印':'东坡';el.append(name,line);el.onclick=()=>interact(i?'fo':'dong');panel.append(el);
+   return {el,line,point:new T.Vector3()};
+ });
+ function show(lines){
+   for(let i=0;i<4;i+=2){const n=lines[i]==='佛印'?1:0;bubbles[n].line.textContent=lines[i+1];}
+ }
+ function interact(kind){const list=replies[kind]||replies.dong,n=counts[kind]||0;counts[kind]=n+1;show(list[n%list.length]);next=time+16;actionUntil=time+4.5;action=kind;}
+ return {actors,interact,place(camera,width,height,enabled){
+   panel.hidden=!enabled;if(!enabled)return;
+   for(let i=0;i<actors.length;i++){
+     const bubble=bubbles[i],p=bubble.point.copy(actors[i].root.position);p.y+=2.32;p.project(camera);
+     const visible=p.z<1&&Math.abs(p.x)<1.08&&Math.abs(p.y)<1.08;bubble.el.hidden=!visible;
+     if(visible){const rawX=(p.x*.5+.5)*width,half=bubble.el.offsetWidth*.5;bubble.el.style.left=Math.max(half+7,Math.min(width-half-7,rawX))+'px';bubble.el.style.top=(-p.y*.5+.5)*height+'px';}
+   }
+ },update(dt,enabled,player){
+   if(!enabled)return;time+=dt;
+   if(time>=next){show(idle[index++%idle.length]);next=time+16;}
    for(let i=0;i<actors.length;i++){
      const a=actors[i],p=a.root.position,perform=time<actionUntil;
      let walking=false,heading=a.heading;
      if(perform){heading=i? -Math.PI/2:Math.PI/2;}
      else if(a.wait>0){a.wait-=dt;heading=i?-Math.PI/2:Math.PI/2;}
      else {const dz=a.target-p.z;heading=dz>0?0:Math.PI;
-       const step=Math.sign(dz)*Math.min(Math.abs(dz),dt*.66);
+       const step=Math.sign(dz)*Math.min(Math.abs(dz),dt*.44);
        // Both characters stay in separate clear lanes; yield to the visitor.
        if(Math.hypot(p.x-player.x,p.z+step-player.z)>.85){p.z+=step;walking=true;}
-       if(Math.abs(dz)<.035){a.wait=1.5+i*.5;a.target=a.target>0?-3.3:.6;}
+       if(Math.abs(dz)<.035){a.wait=6+i*1.75;a.target=a.target>0?-3.3:.6;}
      }
      const delta=Math.atan2(Math.sin(heading-a.heading),Math.cos(heading-a.heading));a.heading+=delta*(1-Math.exp(-dt*3));
      a.root.rotation.y=a.heading;
