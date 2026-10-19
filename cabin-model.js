@@ -2,8 +2,8 @@ import * as T from './vendor/three.module.js';
 
 export async function loadCabinModel(){
   const [metaResponse,binaryResponse]=await Promise.all([
-    fetch('./assets/cabin-interior-meta.json?v=19'),
-    fetch('./assets/cabin-interior.bin?v=19')
+    fetch('./assets/cabin-interior-meta.json?v=32'),
+    fetch('./assets/cabin-interior.bin?v=32')
   ]);
   if(!metaResponse.ok||!binaryResponse.ok)throw new Error('精细船舱模型加载失败');
   const data=await metaResponse.json(),buffer=await binaryResponse.arrayBuffer(),root=new T.Group(),items={};let lattice=null;

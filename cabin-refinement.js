@@ -49,11 +49,4 @@ function batchCarvings(group){
 export function refineCabinObjects(items,materials){
  // The original pipa was showing its back to arriving visitors.
  if(items.lute)for(const child of items.lute.children)child.rotation.y=Math.PI;
- if(items.fan){
-   const sh=new T.Shape();
-   for(let i=0;i<=48;i++){const a=-1.05+i*2.1/48,x=.70*Math.sin(a),y=.95+.54*Math.cos(a);if(i===0)sh.moveTo(x,y);else sh.lineTo(x,y);}
-   for(let i=48;i>=0;i--){const a=-1.05+i*2.1/48;sh.lineTo(.48*Math.sin(a),.71+.40*Math.cos(a));}sh.closePath();
-   const leaf=new T.Mesh(new T.ExtrudeGeometry(sh,{depth:.018,bevelEnabled:true,bevelSegments:3,bevelSize:.006,bevelThickness:.005}),materials.base);
-   leaf.position.z=-.065;leaf.castShadow=leaf.receiveShadow=true;items.fan.add(leaf);
- }
 }

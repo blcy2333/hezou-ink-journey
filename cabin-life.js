@@ -27,7 +27,12 @@ export function makeCabinLife(dong,fo,panel){
  for(const a of actors){a.root.position.set(a.x,0,a.z);a.heading=0;a.wait=9+a.phase*2;a.target=a.stops[a.nextStop];}
  const bubbles=actors.map((actor,i)=>{
    const el=document.createElement('button'),name=document.createElement('b'),line=document.createElement('span');
-   el.type='button';el.className='actor-speech';name.textContent=i?'佛印':'东坡';el.append(name,line);el.onclick=()=>interact(i?'fo':'dong');panel.append(el);
+   el.type='button';el.className='actor-speech';name.textContent=i?'佛印':'东坡';el.append(name,line);
+   // Keep the speech bubble itself alive while its copy changes. Stopping the
+   // pointer event also prevents a click from reaching the scene drag handler.
+   el.addEventListener('pointerdown',event=>event.stopPropagation());
+   el.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();interact(i?'fo':'dong');});
+   panel.append(el);
    return {el,line,point:new T.Vector3()};
  });
  function show(lines){
