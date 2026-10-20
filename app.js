@@ -3,11 +3,11 @@ import {makeCabinRefinement,refineCabinObjects} from './cabin-refinement.js?v=32
 import {moveCabin} from './navigation.js?v=27';
 import * as T from './vendor/three.module.js';
 import {loadCarvedBoat} from './carved-model.js?v=5';
-import {loadCabinModel} from './cabin-model.js?v=33';
+import {loadCabinModel} from './cabin-model.js?v=34';
 import {makeJourney} from './journey.js?v=13';
 import {makeRiverBow} from './river-bow.js?v=27';
 import {makeCabinVista} from './cabin-vista.js?v=21';
-import {makeCabinObjects} from './cabin-objects.js?v=19';
+import {makeCabinObjects} from './cabin-objects.js?v=34';
 import {makeCarvedScreen} from './carved-interior.js?v=14';
 import {makeCabinDetail} from './cabin-detail.js?v=15';
 const $=id=>document.getElementById(id), canvas=$('world');
