@@ -1,13 +1,13 @@
 import {makeCabinLife,fitWalkingFigure} from './cabin-life.js?v=32';
 import {makeCabinRefinement,refineCabinObjects} from './cabin-refinement.js?v=32';
-import {moveCabin} from './navigation.js?v=27';
+import {moveCabin} from './navigation.js?v=40';
 import * as T from './vendor/three.module.js';
 import {loadCarvedBoat} from './carved-model.js?v=5';
-import {loadCabinModel} from './cabin-model.js?v=38';
-import {makeJourney} from './journey.js?v=13';
+import {loadCabinModel} from './cabin-model.js?v=40';
+import {makeJourney} from './journey.js?v=40';
 import {makeRiverBow} from './river-bow.js?v=27';
 import {makeCabinVista} from './cabin-vista.js?v=21';
-import {makeCabinObjects} from './cabin-objects.js?v=34';
+import {makeCabinObjects} from './cabin-objects.js?v=40';
 import {makeCarvedScreen} from './carved-interior.js?v=14';
 import {makeCabinDetail} from './cabin-detail.js?v=15';
 const $=id=>document.getElementById(id), canvas=$('world');
@@ -80,6 +80,18 @@ function touchObject(item){item.active=!item.active;dismiss();showObjectCard(ite
 function pluck(){if(!audioOn||!audioCtx)return;for(let i=0;i<3;i++){const o=audioCtx.createOscillator(),g=audioCtx.createGain(),t=audioCtx.currentTime+i*.09;o.type='triangle';o.frequency.value=[293.66,392,440][i];g.gain.setValueAtTime(.06,t);g.gain.exponentialRampToValueAtTime(.001,t+.7);o.connect(g).connect(audioCtx.destination);o.start(t);o.stop(t+.72);}}
 let windowClose=false;
 let mode='intro',travel=0,sailing=false,yaw=0,pitch=0,orbit=.5,windowIndex=0,solved=false,seen=0,drag=null,clock=new T.Clock(),toastTimer,windowRotation=0;
+let activeLandmark=-2;
+function updateLandmarkCard(){
+ const card=$('landmarkCard');
+ if(mode!=='river'){card.hidden=true;activeLandmark=-2;return;}
+ const index=journey.landmarks.findIndex(item=>Math.abs(travel-item.at)<=7.5);
+ if(index===activeLandmark)return;
+ activeLandmark=index;
+ if(index<0){card.hidden=true;return;}
+ const item=journey.landmarks[index];
+ $('landmarkSide').textContent=item.side+' · 行舟到站';$('landmarkName').textContent=item.name;$('landmarkLabel').textContent=item.label;$('landmarkHistory').textContent=item.history;
+ card.dataset.side=item.side;card.hidden=false;
+}
 const names=['水巷 · 一重景','园林 · 二重景','月夜 · 三重景'];
 function toast(s){$('toast').textContent=s;$('toast').style.opacity=1;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').style.opacity=0,3500);}
 function say(who,line,options){$('dialogue').hidden=false;$('who').textContent=who;$('tone').textContent=who==='东坡'?'舟中闲客 · 兴致正浓':'舟中闲客 · 心有成竹';$('line').textContent=line;$('choices').replaceChildren();for(let [label,fn] of options){let b=document.createElement('button');b.textContent=label;b.onclick=fn;$('choices').appendChild(b);}}
@@ -101,7 +113,7 @@ const cabinMoveReady=mode==='cabin'&&!windowClose&&$('dialogue').hidden&&$('puzz
 cabinLife.update(document.hidden?0:Math.min(realDt,.15),mode==='cabin'&&!windowClose&&$('puzzle').hidden,cabinPos);hotspots[0].p.copy(dpo.position).y+=2;hotspots[1].p.copy(fo.position).y+=2;for(const [i,actor] of [dpo,fo].entries()){hotspots[i].el.textContent=(i?'佛印':'东坡')+' · '+(actor.userData.actionLabel||'舟中闲客');}objects.update(dt,t);journey.update(t);riverBow.update(t,sailing||autoSail,travel);vistaDepth.update(yaw,pitch,windowClose);
 if(mode==='intro'){target.set(7,4,8);look.set(-1.2,.7,0);boat.position.set(0,0,0);boat.rotation.y=.1;}else if(mode==='river'){target.set(0,3.1,-travel);look.set(Math.sin(yaw)*14,3.1-pitch*7,-travel-14*Math.cos(yaw));}else if(mode==='cabin'){if(windowClose){const d=innerWidth<700?3.5:4.5;target.set(Math.sin(T.MathUtils.clamp(yaw,-.42,.42))*d*1.3,2.48+Math.sin(T.MathUtils.clamp(pitch,-.22,.22))*d,-6.42+Math.cos(T.MathUtils.clamp(yaw,-.42,.42))*d*1.3);look.set(0,2.48,-6.42);}else{target.copy(cabinPos);look.set(cabinPos.x+Math.sin(yaw)*7,cabinPos.y-pitch*5,cabinPos.z-7*Math.cos(yaw));const bob=viewerStride*(.026-.026*Math.cos(viewerStep*2)),sway=viewerStride*Math.sin(viewerStep)*.018,dx=Math.cos(yaw)*sway,dz=Math.sin(yaw)*sway;target.add(new T.Vector3(dx,bob,dz));look.add(new T.Vector3(dx,bob,dz));}}else{target.set(Math.sin(orbit)*distance,4,Math.cos(orbit)*distance);look.set(-1.35,.7,0);boat.rotation.z=Math.sin(t*.6)*.025;}
 if(mode==='cabin'&&!windowClose)camera.position.copy(target);
-const paintedMode=mode==='intro';river.visible=false;journey.group.visible=mode==='river';riverBow.group.visible=mode==='river';boat.visible=mode==='intro'||mode==='outside';painted.hidden=mode!=='intro';scene.fog=mode==='river'?riverFog:null;if(mode==='river')renderer.setClearColor(0xeeeadd);renderer.setClearAlpha(paintedMode?0:1);if(paintedMode)painted.style.transform='scale('+(1.02+travel*.007)+') translate('+Math.sin(yaw)*2+'%,0)';else painted.style.transform='none';document.body.classList.toggle('painting-mode',paintedMode);camera.position.lerp(target,first?1:1-Math.exp(-dt*3));camera.lookAt(look);cabinLife.place(camera,innerWidth,innerHeight,mode==='cabin'&&!windowClose&&$('puzzle').hidden);first=false;activeLattice.rotation.z=T.MathUtils.lerp(activeLattice.rotation.z,windowRotation,.08);for(let i=0;i<ripples.length;i++)ripples[i].position.x=Math.sin(t*.3+i)*.07;for(let h of hotspots){h.el.hidden=windowClose||mode!=='cabin'||!$('dialogue').hidden||!$('puzzle').hidden;if(!h.el.hidden){let p=h.p.clone().project(camera);h.el.style.left=(p.x*.5+.5)*innerWidth+'px';h.el.style.top=(-p.y*.5+.5)*innerHeight+'px';h.el.style.display=p.z>1||Math.abs(p.x)>1||Math.abs(p.y)>1?'none':'block';}}$('riverHud').hidden=mode!=='river';$('autoSail').hidden=mode!=='river';$('autoSail').textContent=autoSail?'暂停行舟':'自动行舟';$('lookLeft').hidden=$('lookRight').hidden=mode!=='river';$('lookLeft').textContent='看左岸';$('lookRight').textContent='看右岸';$('forwardView').hidden=mode!=='river';$('joystick').hidden=mode!=='cabin'||windowClose||!$('dialogue').hidden||!$('puzzle').hidden;$('inspectWindow').hidden=mode!=='cabin';$('routeProgress').value=travel;const part=Math.min(3,Math.floor(travel/40));$('routePlace').textContent=['山塘水巷','园林借景','虎丘塔影 · 盘门城影','江南深处'][part];$('inspectTurn').hidden=mode!=='cabin'||!windowClose;renderer.render(scene,camera);}
+const paintedMode=mode==='intro';river.visible=false;journey.group.visible=mode==='river';riverBow.group.visible=mode==='river';boat.visible=mode==='intro'||mode==='outside';painted.hidden=mode!=='intro';scene.fog=mode==='river'?riverFog:null;if(mode==='river')renderer.setClearColor(0xeeeadd);renderer.setClearAlpha(paintedMode?0:1);if(paintedMode)painted.style.transform='scale('+(1.02+travel*.007)+') translate('+Math.sin(yaw)*2+'%,0)';else painted.style.transform='none';document.body.classList.toggle('painting-mode',paintedMode);camera.position.lerp(target,first?1:1-Math.exp(-dt*3));camera.lookAt(look);cabinLife.place(camera,innerWidth,innerHeight,mode==='cabin'&&!windowClose&&$('puzzle').hidden);first=false;activeLattice.rotation.z=T.MathUtils.lerp(activeLattice.rotation.z,windowRotation,.08);for(let i=0;i<ripples.length;i++)ripples[i].position.x=Math.sin(t*.3+i)*.07;for(let h of hotspots){h.el.hidden=windowClose||mode!=='cabin'||!$('dialogue').hidden||!$('puzzle').hidden;if(!h.el.hidden){let p=h.p.clone().project(camera);h.el.style.left=(p.x*.5+.5)*innerWidth+'px';h.el.style.top=(-p.y*.5+.5)*innerHeight+'px';h.el.style.display=p.z>1||Math.abs(p.x)>1||Math.abs(p.y)>1?'none':'block';}}$('riverHud').hidden=mode!=='river';$('autoSail').hidden=mode!=='river';$('autoSail').textContent=autoSail?'暂停行舟':'自动行舟';$('lookLeft').hidden=$('lookRight').hidden=mode!=='river';$('lookLeft').textContent='看左岸';$('lookRight').textContent='看右岸';$('forwardView').hidden=mode!=='river';$('joystick').hidden=mode!=='cabin'||windowClose||!$('dialogue').hidden||!$('puzzle').hidden;$('inspectWindow').hidden=mode!=='cabin';$('routeProgress').value=travel;const part=Math.min(3,Math.floor(travel/40));$('routePlace').textContent=['七里山塘','拙政园 · 园林借景','虎丘塔影','盘门水城'][part];updateLandmarkCard();$('inspectTurn').hidden=mode!=='cabin'||!windowClose;renderer.render(scene,camera);}
 const originalEnter=enter;$('face').onclick=()=>{first=true;windowClose=false;$('inspectWindow').textContent='近看花窗';yaw=0;pitch=0;dismiss();$('puzzle').hidden=true;};new MutationObserver(()=>{$('face').hidden=mode!=='cabin';document.body.classList.toggle('in-cabin',mode==='cabin');}).observe($('chapter'),{childList:true});
 window.onresize=()=>{camera.aspect=innerWidth/innerHeight;camera.fov=innerWidth<700?67:48;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);};$('loading').hidden=true;frame();
 loadCarvedBoat().then(model=>{boat.clear();boat.add(model);for(const [key,person] of [['figure_scholar',dpo],['figure_monk',fo]]){const source=model.userData.figures[key];if(source){fitWalkingFigure(person,source,key==='figure_monk');}}}).catch(error=>{console.error(error);toast('精细船体暂未加载，保留基础模型。');});

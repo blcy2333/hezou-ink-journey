@@ -17,7 +17,7 @@ export function makeCabinObjects(materials){
   for(const front of [-1,1])tube([[-.52,.23,front*.40],[0,.17,front*.40],[.52,.23,front*.40]],.018,s,raised);
  }
  function item(name,x,z,kind){stand(x,z);const root=new T.Group();root.position.set(x,.93,z);group.add(root);const i={name,root,kind,active:false,value:0,p:new T.Vector3(x,2.2,z)};items.push(i);return i;}
- const fan=item('苏扇 · 借风',-3.45,-3.6,'fan');fan.root.rotation.x=-.12;fan.root.rotation.y=.6;
+ const fan=item('苏扇 · 借风',-3.20,-3.6,'fan');fan.root.rotation.x=-.12;fan.root.rotation.y=.6;
  const leaf=new T.Group();fan.root.add(leaf);fan.leaf=leaf;
  for(let k=0;k<15;k++){const a=(k-7)*.12;const rib=new T.Group();rib.rotation.z=a;leaf.add(rib);box(.022,1.2,.035,0,.63,0,raised,rib);const sh=new T.Shape();sh.moveTo(-.075,.38);sh.lineTo(-.09,1.2);sh.quadraticCurveTo(0,1.26,.09,1.2);sh.lineTo(.075,.38);sh.closePath();mesh(new T.ExtrudeGeometry(sh,{depth:.015,bevelEnabled:true,bevelSize:.002,bevelThickness:.002,bevelSegments:2}),edge,0,0,-.025,rib);for(let j=0;j<3;j++)tube([[-.06,.58+j*.17,0],[0,.65+j*.17,.008],[.06,.58+j*.17,0]],.007,rib);}
  mesh(new T.SphereGeometry(.05,20,12),raised,0,.04,.035,fan.root);
