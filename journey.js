@@ -92,39 +92,19 @@ export function makeJourney(){
   block(g,[1.55,.15,4.65],[0,4.17,0],inkRoof);block(g,[1.30,.13,5.15],[0,4.34,0],inkRoof);
   group.add(g);return g;
  }
- // Landmark paintings sit close to the long bank scroll as a middle layer.
- // Soft UV masks, restrained colour and shared fog remove the cut-out edge.
- const landmarkAtlas=loader.load('./assets/suzhou-landmarks-v1.png');landmarkAtlas.colorSpace=T.SRGBColorSpace;landmarkAtlas.anisotropy=8;
- function landmarkSprite(quadrant,x,z,w,h,rotation){
-  const map=landmarkAtlas.clone();map.needsUpdate=true;map.repeat.set(.5,.5);map.offset.set(quadrant%2*.5,quadrant<2?.5:0);
-  const material=new T.MeshBasicMaterial({map,transparent:true,opacity:.76,alphaTest:.015,depthWrite:false,side:T.DoubleSide,toneMapped:false});
-  material.onBeforeCompile=s=>{
-   s.vertexShader=s.vertexShader.replace('#include <common>','#include <common>\nvarying vec2 landmarkUV;').replace('#include <begin_vertex>','#include <begin_vertex>\nlandmarkUV=uv;');
-   s.fragmentShader=s.fragmentShader.replace('#include <common>','#include <common>\nvarying vec2 landmarkUV;').replace('#include <color_fragment>',`#include <color_fragment>
-    float edge=smoothstep(0.,.12,landmarkUV.x)*smoothstep(0.,.12,1.-landmarkUV.x)*smoothstep(0.,.17,landmarkUV.y)*smoothstep(0.,.10,1.-landmarkUV.y);
-    float grey=dot(diffuseColor.rgb,vec3(.299,.587,.114));
-    diffuseColor.rgb=mix(vec3(grey),diffuseColor.rgb,.58);
-    diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.86,.85,.78),.12);
-    diffuseColor.a*=edge;`);
-  };
-  const sprite=new T.Mesh(new T.PlaneGeometry(w,h),material);sprite.position.set(x,h*.44,z);sprite.rotation.y=rotation;sprite.renderOrder=1;group.add(sprite);return sprite;
- }
- const shantang=landmarkSprite(0,-12.72,-20,7.55,4.9,Math.PI/2);
- const garden=landmarkSprite(1,12.72,-48,7.6,4.8,-Math.PI/2);
- const tiger=landmarkSprite(2,-12.72,-88,5.7,5.55,Math.PI/2);
- const panmen=landmarkSprite(3,12.72,-124,7.55,4.9,-Math.PI/2);
+ // The four landmarks are painted directly into the two continuous shore
+ // scrolls above. No separate billboard is placed in front of the scenery.
  const bridgeMap=loader.load('./assets/ink-bridge-v1.webp');bridgeMap.colorSpace=T.SRGBColorSpace;bridgeMap.anisotropy=8;
  const bridge=new T.Mesh(new T.PlaneGeometry(25.6,10.68),new T.MeshBasicMaterial({map:bridgeMap,transparent:true,alphaTest:.08,side:T.DoubleSide,toneMapped:false}));
  bridge.position.set(0,5.34,-64);group.add(bridge);
  // Fine ink ripples keep the open foreground legible without blocking the view.
  for(let i=0;i<120;i++){const x=Math.sin(i*12.7)*15,z=12-i*1.7,w=.3+(i%5)*.22;const g=new T.BufferGeometry().setFromPoints([new T.Vector3(x-w,.015,z),new T.Vector3(x+w,.015,z+.06)]);group.add(new T.Line(g,new T.LineBasicMaterial({color:0x7f928c,transparent:true,opacity:.16})));}
- // The bridge stays in the frontal painting, while four bank-side landmarks
- // gain enough real depth to reveal themselves as the viewer turns their head.
+ // Trigger points follow the landmarks already painted into the shore scrolls.
  const landmarks=[
-  {id:'shantang',name:'七里山塘',label:'山塘街 · 白公堤',side:'左岸',at:20,model:shantang,p:new T.Vector3(-12.15,2.5,-20),history:'唐宝历二年（825），白居易任苏州刺史时疏浚山塘河。河街相依，渐成今日“七里山塘”。'},
-  {id:'garden',name:'拙政园',label:'苏州园林 · 借景入画',side:'右岸',at:48,model:garden,p:new T.Vector3(12.15,2.5,-48),history:'明正德四年（1509），王献臣退居苏州营建拙政园。全园以水为中心，把山林、亭榭与远景收进一墙之内。'},
-  {id:'tiger',name:'虎丘塔',label:'云岩寺塔 · 苏州斜塔',side:'左岸',at:88,model:tiger,p:new T.Vector3(-12.10,3,-88),history:'云岩寺塔始建于五代后周，七级八面。历经千年后塔身微斜，成为虎丘最醒目的城市轮廓。'},
-  {id:'panmen',name:'盘门',label:'水陆城门 · 瑞光塔影',side:'右岸',at:124,model:panmen,p:new T.Vector3(12.10,2.6,-124),history:'盘门把水门与陆门并列在同一座城防中。今天所见主体经元代重建、明清续修，是苏州水城格局的缩影。'}
+  {id:'shantang',name:'七里山塘',label:'山塘街 · 白公堤',side:'左岸',at:20,history:'唐宝历二年（825），白居易任苏州刺史时疏浚山塘河。河街相依，渐成今日“七里山塘”。'},
+  {id:'panmen',name:'盘门',label:'水陆城门 · 瑞光塔影',side:'右岸',at:57,history:'盘门把水门与陆门并列在同一座城防中。今天所见主体经元代重建、明清续修，是苏州水城格局的缩影。'},
+  {id:'tiger',name:'虎丘塔',label:'云岩寺塔 · 苏州斜塔',side:'左岸',at:70,history:'云岩寺塔始建于五代后周，七级八面。历经千年后塔身微斜，成为虎丘最醒目的城市轮廓。'},
+  {id:'garden',name:'拙政园',label:'苏州园林 · 借景入画',side:'左岸',at:142,history:'明正德四年（1509），王献臣退居苏州营建拙政园。全园以水为中心，把山林、亭榭与远景收进一墙之内。'}
  ];
  return {group,landmarks,length:160,update(time){waterMaterial.uniforms.uTime.value=time;}};
 }
