@@ -92,17 +92,27 @@ export function makeJourney(){
   block(g,[1.55,.15,4.65],[0,4.17,0],inkRoof);block(g,[1.30,.13,5.15],[0,4.34,0],inkRoof);
   group.add(g);return g;
  }
+ // Landmark paintings sit close to the long bank scroll as a middle layer.
+ // Soft UV masks, restrained colour and shared fog remove the cut-out edge.
  const landmarkAtlas=loader.load('./assets/suzhou-landmarks-v1.png');landmarkAtlas.colorSpace=T.SRGBColorSpace;landmarkAtlas.anisotropy=8;
  function landmarkSprite(quadrant,x,z,w,h,rotation){
-  const geometry=new T.PlaneGeometry(w,h),uv=geometry.attributes.uv,ox=quadrant%2*.5,oy=quadrant<2?.5:0;
-  for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*.5+ox,uv.getY(i)*.5+oy);
-  const material=new T.MeshBasicMaterial({map:landmarkAtlas,transparent:true,alphaTest:.055,depthWrite:false,side:T.DoubleSide,toneMapped:false});
-  const sprite=new T.Mesh(geometry,material);sprite.position.set(x,h*.47,z);sprite.rotation.y=rotation;sprite.renderOrder=2;group.add(sprite);return sprite;
+  const map=landmarkAtlas.clone();map.needsUpdate=true;map.repeat.set(.5,.5);map.offset.set(quadrant%2*.5,quadrant<2?.5:0);
+  const material=new T.MeshBasicMaterial({map,transparent:true,opacity:.76,alphaTest:.015,depthWrite:false,side:T.DoubleSide,toneMapped:false});
+  material.onBeforeCompile=s=>{
+   s.vertexShader=s.vertexShader.replace('#include <common>','#include <common>\nvarying vec2 landmarkUV;').replace('#include <begin_vertex>','#include <begin_vertex>\nlandmarkUV=uv;');
+   s.fragmentShader=s.fragmentShader.replace('#include <common>','#include <common>\nvarying vec2 landmarkUV;').replace('#include <color_fragment>',`#include <color_fragment>
+    float edge=smoothstep(0.,.12,landmarkUV.x)*smoothstep(0.,.12,1.-landmarkUV.x)*smoothstep(0.,.17,landmarkUV.y)*smoothstep(0.,.10,1.-landmarkUV.y);
+    float grey=dot(diffuseColor.rgb,vec3(.299,.587,.114));
+    diffuseColor.rgb=mix(vec3(grey),diffuseColor.rgb,.58);
+    diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.86,.85,.78),.12);
+    diffuseColor.a*=edge;`);
+  };
+  const sprite=new T.Mesh(new T.PlaneGeometry(w,h),material);sprite.position.set(x,h*.44,z);sprite.rotation.y=rotation;sprite.renderOrder=1;group.add(sprite);return sprite;
  }
- const shantang=landmarkSprite(0,-12.15,-20,8.2,5.2,Math.PI/2);
- const garden=landmarkSprite(1,12.15,-48,8.4,5.1,-Math.PI/2);
- const tiger=landmarkSprite(2,-12.10,-88,6.4,6.2,Math.PI/2);
- const panmen=landmarkSprite(3,12.10,-124,8.3,5.3,-Math.PI/2);
+ const shantang=landmarkSprite(0,-12.72,-20,7.55,4.9,Math.PI/2);
+ const garden=landmarkSprite(1,12.72,-48,7.6,4.8,-Math.PI/2);
+ const tiger=landmarkSprite(2,-12.72,-88,5.7,5.55,Math.PI/2);
+ const panmen=landmarkSprite(3,12.72,-124,7.55,4.9,-Math.PI/2);
  const bridgeMap=loader.load('./assets/ink-bridge-v1.webp');bridgeMap.colorSpace=T.SRGBColorSpace;bridgeMap.anisotropy=8;
  const bridge=new T.Mesh(new T.PlaneGeometry(25.6,10.68),new T.MeshBasicMaterial({map:bridgeMap,transparent:true,alphaTest:.08,side:T.DoubleSide,toneMapped:false}));
  bridge.position.set(0,5.34,-64);group.add(bridge);

@@ -4,7 +4,7 @@ import {moveCabin} from './navigation.js?v=40';
 import * as T from './vendor/three.module.js';
 import {loadCarvedBoat} from './carved-model.js?v=5';
 import {loadCabinModel} from './cabin-model.js?v=40';
-import {makeJourney} from './journey.js?v=40';
+import {makeJourney} from './journey.js?v=41';
 import {makeRiverBow} from './river-bow.js?v=27';
 import {makeCabinVista} from './cabin-vista.js?v=21';
 import {makeCabinObjects} from './cabin-objects.js?v=40';
