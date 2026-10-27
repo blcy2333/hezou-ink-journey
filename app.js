@@ -4,7 +4,7 @@ import {moveCabin} from './navigation.js?v=40';
 import * as T from './vendor/three.module.js';
 import {loadCarvedBoat} from './carved-model.js?v=5';
 import {loadCabinModel} from './cabin-model.js?v=40';
-import {makeJourney} from './journey.js?v=42';
+import {makeJourney} from './journey.js?v=43';
 import {makeRiverBow} from './river-bow.js?v=27';
 import {makeCabinVista} from './cabin-vista.js?v=21';
 import {makeCabinObjects} from './cabin-objects.js?v=40';
@@ -82,9 +82,11 @@ let windowClose=false;
 let mode='intro',travel=0,sailing=false,yaw=0,pitch=0,orbit=.5,windowIndex=0,solved=false,seen=0,drag=null,clock=new T.Clock(),toastTimer,windowRotation=0;
 let activeLandmark=-2;
 function updateLandmarkCard(){
- const card=$('landmarkCard');
- if(mode!=='river'){card.hidden=true;activeLandmark=-2;return;}
- const index=journey.landmarks.findIndex(item=>Math.abs(travel-item.at)<=7.5);
+ const card=$('landmarkCard'),beacon=$('landmarkBeacon');
+ if(mode!=='river'){card.hidden=true;beacon.hidden=true;activeLandmark=-2;return;}
+ const nearest=journey.landmarks.map((item,index)=>({item,index,distance:Math.abs(travel-item.at)})).sort((a,b)=>a.distance-b.distance)[0];
+ if(nearest&&nearest.distance<=15){const {item}=nearest;beacon.hidden=false;beacon.dataset.side=item.side;beacon.dataset.landmark=item.id;$('landmarkBeaconText').textContent=(item.side==='左岸'?'← 向左看 · ':'向右看 · → ')+item.name;beacon.setAttribute('aria-label','转向'+item.side+'查看'+item.name);}else beacon.hidden=true;
+ const index=nearest&&nearest.distance<=7.5?nearest.index:-1;
  if(index===activeLandmark)return;
  activeLandmark=index;
  if(index<0){card.hidden=true;return;}
@@ -92,6 +94,7 @@ function updateLandmarkCard(){
  $('landmarkSide').textContent=item.side+' · 行舟到站';$('landmarkName').textContent=item.name;$('landmarkLabel').textContent=item.label;$('landmarkHistory').textContent=item.history;
  card.dataset.side=item.side;card.hidden=false;
 }
+$('landmarkBeacon').onclick=()=>{const item=journey.landmarks.find(entry=>entry.id===$('landmarkBeacon').dataset.landmark);if(!item)return;first=true;yaw=item.side==='左岸'?-Math.PI/2:Math.PI/2;pitch=0;toast('已转向'+item.side+' · '+item.name);};
 const names=['水巷 · 一重景','园林 · 二重景','月夜 · 三重景'];
 function toast(s){$('toast').textContent=s;$('toast').style.opacity=1;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').style.opacity=0,3500);}
 function say(who,line,options){$('dialogue').hidden=false;$('who').textContent=who;$('tone').textContent=who==='东坡'?'舟中闲客 · 兴致正浓':'舟中闲客 · 心有成竹';$('line').textContent=line;$('choices').replaceChildren();for(let [label,fn] of options){let b=document.createElement('button');b.textContent=label;b.onclick=fn;$('choices').appendChild(b);}}
@@ -110,7 +113,7 @@ const riverFog=new T.FogExp2(0xeeeadd,.004);
 const target=new T.Vector3(),look=new T.Vector3();camera.position.set(20,12,19);let first=true,elapsed=0;
 function frame(){requestAnimationFrame(frame);const realDt=clock.getDelta(),dt=Math.min(realDt,.05);elapsed+=dt;const t=elapsed;if(mode==='river'&&(sailing||autoSail)){travel=Math.min(travel+dt*3,journey.length);if(travel===journey.length&&!routeEnd){routeEnd=true;autoSail=false;sailing=false;toast('一程江南已尽，进舟中坐坐。');}}
 const cabinMoveReady=mode==='cabin'&&!windowClose&&$('dialogue').hidden&&$('puzzle').hidden;if(!cabinMoveReady&&(joystick.x||joystick.y||joystick.drive||joystick.turn))resetJoystick();if(cabinMoveReady){const forward=T.MathUtils.clamp(Number(keys.has('KeyW')||keys.has('ArrowUp'))-Number(keys.has('KeyS')||keys.has('ArrowDown'))-joystick.y,-1,1),turn=T.MathUtils.clamp(Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'))+joystick.x,-1,1);joystick.drive=forward===0?0:T.MathUtils.damp(joystick.drive,forward,6.2,dt);joystick.turn=turn===0?0:T.MathUtils.damp(joystick.turn,turn,5.4,dt);yaw=T.MathUtils.euclideanModulo(yaw+joystick.turn*dt*.92+Math.PI,Math.PI*2)-Math.PI;const next=moveCabin(cabinPos,yaw,joystick.drive*dt*1.12,[dpo.position,fo.position]),moved=Math.hypot(next.x-cabinPos.x,next.z-cabinPos.z);viewerStride=T.MathUtils.damp(viewerStride,moved>0?Math.min(1,Math.abs(joystick.drive)):0,9,dt);viewerStep+=moved*7.5;cabinPos.x=next.x;cabinPos.z=next.z;}else viewerStride=T.MathUtils.damp(viewerStride,0,9,dt);
-cabinLife.update(document.hidden?0:Math.min(realDt,.15),mode==='cabin'&&!windowClose&&$('puzzle').hidden,cabinPos);hotspots[0].p.copy(dpo.position).y+=2;hotspots[1].p.copy(fo.position).y+=2;for(const [i,actor] of [dpo,fo].entries()){hotspots[i].el.textContent=(i?'佛印':'东坡')+' · '+(actor.userData.actionLabel||'舟中闲客');}objects.update(dt,t);journey.update(t);riverBow.update(t,sailing||autoSail,travel);vistaDepth.update(yaw,pitch,windowClose);
+cabinLife.update(document.hidden?0:Math.min(realDt,.15),mode==='cabin'&&!windowClose&&$('puzzle').hidden,cabinPos);hotspots[0].p.copy(dpo.position).y+=2;hotspots[1].p.copy(fo.position).y+=2;for(const [i,actor] of [dpo,fo].entries()){hotspots[i].el.textContent=(i?'佛印':'东坡')+' · '+(actor.userData.actionLabel||'舟中闲客');}objects.update(dt,t);journey.update(t,yaw);riverBow.update(t,sailing||autoSail,travel);vistaDepth.update(yaw,pitch,windowClose);
 if(mode==='intro'){target.set(7,4,8);look.set(-1.2,.7,0);boat.position.set(0,0,0);boat.rotation.y=.1;}else if(mode==='river'){target.set(0,3.1,-travel);look.set(Math.sin(yaw)*14,3.1-pitch*7,-travel-14*Math.cos(yaw));}else if(mode==='cabin'){if(windowClose){const d=innerWidth<700?3.5:4.5;target.set(Math.sin(T.MathUtils.clamp(yaw,-.42,.42))*d*1.3,2.48+Math.sin(T.MathUtils.clamp(pitch,-.22,.22))*d,-6.42+Math.cos(T.MathUtils.clamp(yaw,-.42,.42))*d*1.3);look.set(0,2.48,-6.42);}else{target.copy(cabinPos);look.set(cabinPos.x+Math.sin(yaw)*7,cabinPos.y-pitch*5,cabinPos.z-7*Math.cos(yaw));const bob=viewerStride*(.026-.026*Math.cos(viewerStep*2)),sway=viewerStride*Math.sin(viewerStep)*.018,dx=Math.cos(yaw)*sway,dz=Math.sin(yaw)*sway;target.add(new T.Vector3(dx,bob,dz));look.add(new T.Vector3(dx,bob,dz));}}else{target.set(Math.sin(orbit)*distance,4,Math.cos(orbit)*distance);look.set(-1.35,.7,0);boat.rotation.z=Math.sin(t*.6)*.025;}
 if(mode==='cabin'&&!windowClose)camera.position.copy(target);
 const paintedMode=mode==='intro';river.visible=false;journey.group.visible=mode==='river';riverBow.group.visible=mode==='river';boat.visible=mode==='intro'||mode==='outside';painted.hidden=mode!=='intro';scene.fog=mode==='river'?riverFog:null;if(mode==='river')renderer.setClearColor(0xeeeadd);renderer.setClearAlpha(paintedMode?0:1);if(paintedMode)painted.style.transform='scale('+(1.02+travel*.007)+') translate('+Math.sin(yaw)*2+'%,0)';else painted.style.transform='none';document.body.classList.toggle('painting-mode',paintedMode);camera.position.lerp(target,first?1:1-Math.exp(-dt*3));camera.lookAt(look);cabinLife.place(camera,innerWidth,innerHeight,mode==='cabin'&&!windowClose&&$('puzzle').hidden);first=false;activeLattice.rotation.z=T.MathUtils.lerp(activeLattice.rotation.z,windowRotation,.08);for(let i=0;i<ripples.length;i++)ripples[i].position.x=Math.sin(t*.3+i)*.07;for(let h of hotspots){h.el.hidden=windowClose||mode!=='cabin'||!$('dialogue').hidden||!$('puzzle').hidden;if(!h.el.hidden){let p=h.p.clone().project(camera);h.el.style.left=(p.x*.5+.5)*innerWidth+'px';h.el.style.top=(-p.y*.5+.5)*innerHeight+'px';h.el.style.display=p.z>1||Math.abs(p.x)>1||Math.abs(p.y)>1?'none':'block';}}$('riverHud').hidden=mode!=='river';$('autoSail').hidden=mode!=='river';$('autoSail').textContent=autoSail?'暂停行舟':'自动行舟';$('lookLeft').hidden=$('lookRight').hidden=mode!=='river';$('lookLeft').textContent='看左岸';$('lookRight').textContent='看右岸';$('forwardView').hidden=mode!=='river';$('joystick').hidden=mode!=='cabin'||windowClose||!$('dialogue').hidden||!$('puzzle').hidden;$('inspectWindow').hidden=mode!=='cabin';$('routeProgress').value=travel;const part=Math.min(3,Math.floor(travel/40));$('routePlace').textContent=['七里山塘','拙政园 · 园林借景','虎丘塔影','盘门水城'][part];updateLandmarkCard();$('inspectTurn').hidden=mode!=='cabin'||!windowClose;renderer.render(scene,camera);}

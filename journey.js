@@ -95,7 +95,8 @@ export function makeJourney(){
  // The four landmarks are painted directly into the two continuous shore
  // scrolls above. No separate billboard is placed in front of the scenery.
  const bridgeMap=loader.load('./assets/ink-bridge-v1.webp');bridgeMap.colorSpace=T.SRGBColorSpace;bridgeMap.anisotropy=8;
- const bridge=new T.Mesh(new T.PlaneGeometry(25.6,10.68),new T.MeshBasicMaterial({map:bridgeMap,transparent:true,alphaTest:.08,side:T.DoubleSide,toneMapped:false}));
+ const bridgeMaterial=new T.MeshBasicMaterial({map:bridgeMap,transparent:true,alphaTest:.035,depthWrite:false,side:T.DoubleSide,toneMapped:false});
+ const bridge=new T.Mesh(new T.PlaneGeometry(25.6,10.68),bridgeMaterial);
  bridge.position.set(0,5.34,-64);group.add(bridge);
  // Fine ink ripples keep the open foreground legible without blocking the view.
  for(let i=0;i<120;i++){const x=Math.sin(i*12.7)*15,z=12-i*1.7,w=.3+(i%5)*.22;const g=new T.BufferGeometry().setFromPoints([new T.Vector3(x-w,.015,z),new T.Vector3(x+w,.015,z+.06)]);group.add(new T.Line(g,new T.LineBasicMaterial({color:0x7f928c,transparent:true,opacity:.16})));}
@@ -106,5 +107,5 @@ export function makeJourney(){
   {id:'tiger',name:'虎丘塔',label:'云岩寺塔 · 苏州斜塔',side:'左岸',at:70,history:'云岩寺塔始建于五代后周，七级八面。历经千年后塔身微斜，成为虎丘最醒目的城市轮廓。'},
   {id:'garden',name:'拙政园',label:'苏州园林 · 借景入画',side:'左岸',at:142,history:'明正德四年（1509），王献臣退居苏州营建拙政园。全园以水为中心，把山林、亭榭与远景收进一墙之内。'}
  ];
- return {group,landmarks,length:160,update(time){waterMaterial.uniforms.uTime.value=time;}};
+ return {group,landmarks,length:160,update(time,yaw=0){waterMaterial.uniforms.uTime.value=time;bridgeMaterial.opacity=1-T.MathUtils.smoothstep(Math.abs(yaw),.24,.82);bridge.visible=bridgeMaterial.opacity>.015;}};
 }
